@@ -8,16 +8,16 @@ require "http"
 get("/") do
 
   # Assemble the API url, including the API key in the query string
-  api_url = "https://api.exchangerate.host/list?access_key=#{ENV.fetch("EXCHANGE_RATE_KEY")}"
-
   # Use HTTP.get to retrieve the API data
-  @raw_response = HTTP.get(api_url)
+  @raw_response = HTTP.get("https://api.exchangerate.host/list?access_key=#{ENV.fetch("EXCHANGE_RATE_KEY")}")
 
   # Get the body of the response as a string
   @raw_string = @raw_response.to_s
 
   # Convert the string to JSON
   @parsed_data = JSON.parse(@raw_string)
+
+  @currencies = @parsed_data.fetch("currencies")
 
   # Render a view template
   erb(:homepage)
@@ -34,31 +34,57 @@ get("/") do
   # is the new equivalent of pretty-printing everything).
 end
 
-get("/:from_currency") do
-  @original_currency = params.fetch("from_currency")
+# get("/:from_currency") do
+#  @original_currency = params.fetch("from_currency")
 
-  api_url = "https://api.exchangerate.host/list?access_key=#{ENV.fetch("EXCHANGE_RATE_KEY")}"
+#  api_url = "https://api.exchangerate.host/list?access_key=#{ENV.fetch("EXCHANGE_RATE_KEY")}"
   
   # Some more code to parse the URL and render a view template.
   # (HINT: this code is identical to the first route, you just
   # render a different view template at the end.)
-end
+# end
 
-get("/:from_currency/:to_currency") do
-  @original_currency = params.fetch("from_currency")
-  @destination_currency = params.fetch("to_currency")
+# get("/:from_currency/:to_currency") do
+#  @original_currency = params.fetch("from_currency")
+#  @destination_currency = params.fetch("to_currency")
 
-  api_url = "https://api.exchangerate.host/convert?access_key=#{ENV.fetch("EXCHANGE_RATE_KEY")}&from=#{@original_currency}&to=#{@destination_currency}&amount=1"
+#  api_url = "https://api.exchangerate.host/convert?access_key=#{ENV.fetch("EXCHANGE_RATE_KEY")}&from=#{@original_currency}&to=#{@destination_currency}&amount=1"
   
   # Some more code to parse the URL and render a view template.
+# end
+
+get("/:from_currency") do
+
+  @the_symbol = params.fetch("from_currency")
+
+  @raw_response = HTTP.get("https://api.exchangerate.host/list?access_key=#{ENV.fetch("EXCHANGE_RATE_KEY")}")
+
+  @raw_string = @raw_response.to_s
+
+  @parsed_data = JSON.parse(@raw_string)
+
+  @currencies = @parsed_data.fetch("currencies")
+
+  erb(:step_one)
+  
 end
 
-get("/USD") do
 
-  erb(:usd)
-end
+get("/:from_currency/:to_currency") do
 
-get("/USD/INR") do
+  @from = params.fetch("from_currency")
+  @to = params.fetch("to_currency")
 
-  erb(:usd_inr)
+  @url = "https://api.exchangerate.host/convert?from=#{@from}&to=#{@to}&amount=1&access_key=#{ENV.fetch("EXCHANGE_RATE_KEY")}"
+
+  @raw_response = HTTP.get(@url)
+
+  @string_response = @raw_response.to_s
+
+  @parsed_response = JSON.parse(@string_response)
+
+  @amount = @parsed_response.fetch("result")
+
+  erb(:step_two)
+  
 end
